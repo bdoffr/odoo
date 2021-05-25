@@ -63,11 +63,10 @@ Odoo模型是通过继承以下其中之一来创建的:<br>
 是否应该创建数据库表(默认值:True)。如果设置为False，重写init()来创建数据库表。
 <table>
     <tr>
-        <td bgcolor="f8f8f8">
+        <td style="background-color: #f8f8f8">
             <div>
                 <span style="color: #477674"><b>小技巧</b></span><br>
                 <div style="color: #477674">要创建没有任何表的模型，请从`AbstractModel`继承</div>
-                <font color="477674"><b>小技巧</b><br>要创建没有任何表的模型，请从`AbstractModel`继承</font>
             </div>
         </td>
     </tr>
