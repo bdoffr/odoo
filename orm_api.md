@@ -1,5 +1,5 @@
 # ORM API
-### 对象关系映射模块
+**对象关系映射模块**
 * 分级结构
 * 约束性 一致性和验证
 * 对象元数据取决于其状态
@@ -48,3 +48,27 @@ def _default_name(self):
 
 name = fields.Char(default=lambda self: self._default_name())
 ```
+**API**<br>
+#### class`odoo.models.` `BaseModel`<br>
+Odoo模型的基类<br>
+Odoo模型是通过继承以下其中之一来创建的:<br>
+* `Model`用于常规持久性数据库模型<br>
+* `TransientModel`用于临时数据，存储在数据库中，但每隔一段时间自动清除<br>
+* `AbstractModel`用于多个继承模型共享的抽象超类<br>
+
+系统对每个数据库的每个模型自动实例化一次。这些实例代表每个数据库上的可用模型，并依赖于该数据库上安装的模块。每个实例的实际类都是由创建并继承相应模型的Python类构建的。<br>
+每个模型实例都是一个“记录集”，即模型记录的有序集合。记录集由诸如`browse()`，`search()`或字段访问等方法返回。记录没有显式表示:一个记录被表示为一个记录的记录集<br>
+要创建一个不应该实例化的类，`_register`属性可以设置为False。<br>
+#### `_auto` = False
+是否应该创建数据库表(默认值:True)。如果设置为False，重写init()来创建数据库表。
+<table>
+    <tr>
+        <td bgcolor="f8f8f8">
+            <div>
+                <span style="color: #477674"><b>小技巧</b></span><br>
+                <div style="color: #477674">要创建没有任何表的模型，请从`AbstractModel`继承</div>
+                <font color="477674"><b>小技巧</b><br>要创建没有任何表的模型，请从`AbstractModel`继承</font>
+            </div>
+        </td>
+    </tr>
+</table>
