@@ -31,8 +31,9 @@ class AModel(models.Model):
     field1 = fields.Char()
 ```
 
-    警告
-    这意味着你不能定义相同名称的字段和方法，后者将会默默覆盖前者
+> 警告
+>
+> 这意味着你不能定义相同名称的字段和方法，后者将会默默覆盖前者
 
 默认情况下，字段的标签（用户可见的名称）是字段名称的大写，这可以用`string`参数覆盖
 
@@ -124,8 +125,9 @@ _inherits = {
 
 实现基于组合的继承:新模型公开继承模型的所有字段，但不存储它们:值本身保存在链接的记录中。
 
-    警告：
-    如果在_inherited -ed模型中定义了多个同名的字段，则继承的字段将对应于最后一个字段(按照继承列表的顺序)。
+> 警告
+>
+> 如果在`_inherited` -ed模型中定义了多个同名的字段，则继承的字段将对应于最后一个字段(按照继承列表的顺序)。
 
 #### `_rec_name` = None
 
@@ -194,12 +196,12 @@ class user(Model):
 
 之后，系统将对每个数据库实例化一个类(类的模块安装在该数据库上)。
 
-###TransientModel
+### TransientModel
 
 class `odoo.models.` `TransientModel`
 
 为瞬时记录建模的超类，意味着临时持久化，并定期进行真空清理。
-l
+
 TransientModel具有简化的访问权限管理，所有用户都可以创建新的记录，并且只能访问他们创建的记录。超级用户可以无限制地访问所有TransientModel记录。
 
 ## Fields
@@ -208,5 +210,64 @@ TransientModel具有简化的访问权限管理，所有用户都可以创建新
 
 字段描述符包含字段定义，并管理记录上对应字段的访问和赋值。当实例化一个字段时，可以提供以下属性:
 
+    参数 string (str) – 用户看到字段的标签;如果没有设置，ORM接受类中的字段名(大写)。
+        help (str) – 用户看到字段的工具提示
+        readonly (bool) –
+        该字段是否为readonly(默认:False)
+        这只对UI有影响。代码中的任何字段都可以赋值(如果字段是存储字段或可逆字段)。
+        required (bool) – 该字段的值是否是必需的(默认:False)
+        index (bool) – 该字段是否在数据库中被索引。注意:对非存储字段和虚拟字段没有影响。(默认值:False)
+        default (value or callable) – 字段的默认值;这要么是一个静态值，要么是一个接受记录集并返回值的函数;使用default=None放弃该字段的默认值
+        states (dict) –
+        一个将状态值映射到UI属性-值对列表的字典;可能的属性有:readonly, required, invisible。
+        警告
+        任何基于状态的条件都要求state字段值在客户端UI上可用。这通常是通过将其包含在相关视图中来完成的，如果与最终用户不相关，则可能使其不可见。
+        groups (str) – 逗号分隔的XML ids组列表(字符串);这只限制了对给定组的用户的字段访问
+        company_dependent (bool) –
+        字段值是否依赖于当前公司;
+        该值不存储在模型表中。它被登记为ir.property。当需要company_dependent字段的值时，一个ir.property将被搜索，并链接到当前公司(如果存在一个属性，则链接到当前记录)。
+        如果记录上的值发生了变化，它要么修改当前记录的现有属性(如果存在的话)，要么为当前公司和res_id创建一个新的属性。
+        如果在公司方面更改了该值，那么它将影响未更改该值的所有记录。
+        copy (bool) – 当记录被复制时，字段值是否应该被复制(默认值:正常字段为True, 一对多和计算字段为False，包括属性字段和相关字段)
+        store (bool) – 字段是否存储在数据库中(默认值:True, False用于计算字段)
+        group_operator (str) –
+        read_group()在对该字段进行分组时使用的聚合函数。
+        支持的聚合函数有:
+        array_agg : 值(包括空值)连接到一个数组中
+        count : 行数
+        count_distinct : 不同行数
+        bool_and : 如果所有值都为true，则为true，否则为false
+        bool_or : 如果至少有一个值都为true，则为true，否则为false
+        max : 所有值的最大值
+        min : 所有值的最小值
+        avg : 所有值的平均数(算术平均数)
+        sum : 所有值的和(算术平均数)
+        group_expand (str) –
+        函数用于在对当前字段进行分组时展开read_group结果。
+        
+        @api.model
+        def _read_group_selection_field(self, values, domain, order):
+           return ['choice1', 'choice2', ...] # 可选choices。
+        
+        @api.model
+        def _read_group_many2one_field(self, records, domain, order):
+           return records + self.search([custom_domain])
+
+**Computed Fields**
+
+    参数 compute (str) –
+        计算该字段的方法的名称
+        参考
+        Advanced Fields/Compute fields
+        compute_sudo (bool) – 是否应该以超级用户的身份重新计算字段以绕过访问权限(默认情况下，存储字段为True，非存储字段为False)
+        inverse (str) – 与字段相反的方法名(可选)
+        search (str) – 实现对字段进行搜索的方法的名称(可选)
+        related (str) –
+        字段名序列
+        Advanced fields/Related fields
+
+    
+
+         
 
 
