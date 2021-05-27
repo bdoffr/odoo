@@ -309,7 +309,9 @@ class Academy(http.Controller):
 
 在重新启动服务器并更新模块之后(为了更新清单和模板)，访问http://localhost:8069/academy/academy/
 应该会产生一个外观更好的页面，带有品牌和许多内置的页面元素(顶级菜单、页脚……)
+
 ![](https://www.odoo.com/documentation/13.0/zh_CN/_images/layout.png)
+
 网站布局还提供了对编辑工具的支持:单击**Sign In**(在右上角)，填写凭证(默认为`admin` / `admin`)，然后单击**Log In**。
 
 您现在处于Odoo的“性能”模式:管理界面。现在单击**Website**菜单项(左上角)。
@@ -411,7 +413,362 @@ def teacher(self, teacher):
 
 重启Odoo并升级模块，然后就可以访问每个老师的页面了。作为一个练习，试着在一个老师的页面上添加块来写一个传记，然后去到另一个老师的页面，以此类推。您将发现，您的传记在所有教师之间是共享的，因为模板中添加了区块，并且传记模板在所有教师之间是共享的，当编辑一个页面时，所有的页面都是同时编辑的。
 
+## 编辑字段
+
+特定于记录的数据应该保存在该记录中，所以让我们为我们的老师添加一个新的传记字段:
+
+##### `academy/models.py`
+
+```python
+class Teachers(models.Model):
+    _name = 'academy.teachers'
+
+    name = fields.Char()
+    biography = fields.Html()
+```
+
+##### `academy/templates.xml`
+
+```xml
+
+<template id="biography">
+    <t t-call="website.layout">
+        <t t-set="title">Academy</t>
+        <div class="oe_structure"/>
+        <div class="oe_structure">
+            <div class="container">
+                <h3>
+                    <t t-esc="person.name"/>
+                </h3>
+                <div>
+                    <t t-esc="person.biography"/>
+                </div>
+            </div>
+        </div>
+        <div class="oe_structure"/>
+    </t>
+</template>
+```
+
+重启Odoo并更新视图，重新加载教师的页面，然后……该字段是不可见的，因为它不包含任何内容。
+
+对于记录字段，模板可以使用特殊的`t-field`指令，该指令允许使用字段特定的接口从网站编辑字段内容。将*person*模板改为使用`t-field`字段:
+
+##### `academy/templates.xml`
+
+```xml
+
+<div class="oe_structure">
+    <div class="container">
+        <h3 t-field="person.name"/>
+        <div t-field="person.biography"/>
+    </div>
+</div>
+```
+
+重启Odoo并升级模块，现在老师的名字下有一个占位符，**编辑**模式下有块的新区域。删除到那里的内容存储在相应的教师`biography`
+字段中，因此特定于该教师。
+
+老师的名字也是可编辑的，保存后，更改在索引页面上可见。
+
+`t-field`也可以采用取决于确切字段的格式设置选项。例如，如果我们显示教师记录的修改日期：
+
+##### `academy/templates.xml`
+
+```xml
+
+<div class="oe_structure">
+    <div class="container">
+        <h3 t-field="person.name"/>
+        <p>Last modified:
+            <i t-field="person.write_date"/>
+        </p>
+        <div t-field="person.biography"/>
+    </div>
+</div>
+```
+
+它以非常“计算机化”的方式显示并且难以阅读，但是我们可以要求提供人类可读的版本：
+
+##### `academy/templates.xml`
+
+```xml
+
+<div class="oe_structure">
+    <div class="container">
+        <h3 t-field="person.name"/>
+        <p>Last modified:
+            <i t-field="person.write_date" t-options='{"format": "long"}'/>
+        </p>
+        <div t-field="person.biography"/>
+    </div>
+</div>
+```
+
+或相对显示：
+
+##### `academy/templates.xml`
+
+```xml
+
+<div class="oe_structure">
+    <div class="container">
+        <h3 t-field="person.name"/>
+        <p>Last modified:
+            <i t-field="person.write_date" t-options='{"widget": "relative"}'/>
+        </p>
+        <div t-field="person.biography"/>
+    </div>
+</div>
+```
+
+## 管理和ERP集成
+
+### 对Odoo管理的简短而不完整的介绍
+
+在网站支持部分中，对Odoo的管理进行了简要介绍。我们可以在菜单中使用**Administrator ‣ Administrator**(或者登录如果已登出)。
+
+Odoo后端的概念结构很简单：
+
+1.首先是菜单，记录树（菜单可以有子菜单）。菜单没有子菜单映射......
+
+2.动作。动作有多种类型:Odoo应该执行的链接、报告、代码或数据显示。数据显示操作称为*窗口*操作，并告诉Odoo显示一个给定的*模型*根据一组视图…
+
+3.视图具有类型、与之相对应的广泛类别(列表、图表、日历)和自定义模型在视图中显示方式的*体系结构*。
+
+让我们为模型创建一个菜单:
+
+##### `academy/__manifest__.py`
+
+```python
+# always loaded
+'data': [
+    'security/ir.model.access.csv',
+    'templates.xml',
+    'views.xml',
+],
+```
+
+##### `academy/views.xml`
+
+```xml
+
+<odoo>
+    <record id="action_academy_teachers" model="ir.actions.act_window">
+        <field name="name">Academy teachers</field>
+        <field name="res_model">academy.teachers</field>
+    </record>
+
+    <menuitem sequence="0" id="menu_academy" name="Academy"/>
+    <menuitem id="menu_academy_content" parent="menu_academy"
+              name="Academy Content"/>
+    <menuitem id="menu_academy_content_teachers"
+              parent="menu_academy_content"
+              action="action_academy_teachers"/>
+</odoo>
+```
+
+然后在左上角访问http://localhost:8069/web/ 应该是一个**Academy**
+菜单，它是默认选择的，因为它是第一个菜单，并且已经打开了一个教师列表。从列表中可以**创建**新的教师记录，并切换到“表单”的记录视图。
+
+如果没有关于如何呈现记录([视图]())的定义，Odoo会自动动态创建一个基本的记录。在我们的例子中，它目前适用于“list”视图(只显示教师的名字)
+，但在“form”视图中，HTML`biography`字段与`name`
+字段并排显示，没有给出足够的空间。让我们定义一个自定义表单视图，让查看和编辑教师记录有一个更好的体验:
+
+##### `academy/views.xml`
+
+```xml
+
+<record id="academy_teacher_form" model="ir.ui.view">
+    <field name="name">Academy teachers: form</field>
+    <field name="model">academy.teachers</field>
+    <field name="arch" type="xml">
+        <form>
+            <sheet>
+                <field name="name"/>
+                <field name="biography"/>
+            </sheet>
+        </form>
+    </field>
+</record>
+```
+
+### 模型之间的关系
+
+我们已经看到了直接存储在记录中的一对“基本”字段。有很多[基本字段]()。第二大类字段是[关系型]()的，用于将记录相互链接(在模型内或跨模型)。
+
+为了进行演示，我们创建一个*课程*模型。每个课程应该有一个`teacher`字段，链接到单个教师记录，但每个教师可以教授许多课程:
+
+##### `academy/models.py`
+
+```python
+class Courses(models.Model):
+    _name = 'academy.courses'
+
+    name = fields.Char()
+    teacher_id = fields.Many2one('academy.teachers', string="Teacher")
+```
+
+##### `academy/security/ir.model.access.csv`
+
+```postgresql
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_academy_teachers,access_academy_teachers,model_academy_teachers,,1,0,0,0
+access_academy_courses,access_academy_courses,model_academy_courses,,1,0,0,0
+```
+
+我们也添加视图，这样我们就可以看到和编辑一个课程的老师:
+
+##### `academy/views.xml`
+
+```xml
+
+<record id="action_academy_courses" model="ir.actions.act_window">
+    <field name="name">Academy courses</field>
+    <field name="res_model">academy.courses</field>
+</record>
+<record id="academy_course_search" model="ir.ui.view">
+<field name="name">Academy courses: search</field>
+<field name="model">academy.courses</field>
+<field name="arch" type="xml">
+    <search>
+        <field name="name"/>
+        <field name="teacher_id"/>
+    </search>
+</field>
+</record>
+<record id="academy_course_list" model="ir.ui.view">
+<field name="name">Academy courses: list</field>
+<field name="model">academy.courses</field>
+<field name="arch" type="xml">
+    <tree string="Courses">
+        <field name="name"/>
+        <field name="teacher_id"/>
+    </tree>
+</field>
+</record>
+<record id="academy_course_form" model="ir.ui.view">
+<field name="name">Academy courses: form</field>
+<field name="model">academy.courses</field>
+<field name="arch" type="xml">
+    <form>
+        <sheet>
+            <field name="name"/>
+            <field name="teacher_id"/>
+        </sheet>
+    </form>
+</field>
+</record>
+
+<menuitem sequence="0" id="menu_academy" name="Academy"/>
+<menuitem id="menu_academy_content" parent="menu_academy"
+          name="Academy Content"/>
+<menuitem id="menu_academy_content_courses"
+          parent="menu_academy_content"
+          action="action_academy_courses"/>
+<menuitem id="menu_academy_content_teachers"
+          parent="menu_academy_content"
+          action="action_academy_teachers"/>
+```
+
+也可以直接从教师的页面创建新课程，或查看他们所教的所有课程，所以添加`the inverse relationship`到教师模型:
+
+##### `academy/models.py`
+
+```python
+class Teachers(models.Model):
+    _name = 'academy.teachers'
+
+    name = fields.Char()
+    biography = fields.Html()
+
+    course_ids = fields.One2many('academy.courses', 'teacher_id',
+                                 string="Courses")
 
 
+class Courses(models.Model):
+    _name = 'academy.courses'
 
+    name = fields.Char()
+    teacher_id = fields.Many2one('academy.teachers', string="Teacher")
+```
 
+##### `academy/views.xml`
+
+```xml
+
+<record id="academy_teacher_form" model="ir.ui.view">
+    <field name="name">Academy teachers: form</field>
+    <field name="model">academy.teachers</field>
+    <field name="arch" type="xml">
+        <form>
+            <sheet>
+                <field name="name"/>
+                <field name="biography"/>
+                <field name="course_ids">
+                    <tree Sstring="Courses" editable="bottom">
+                        <field name="name"/>
+                    </tree>
+                </field>
+            </sheet>
+        </form>
+    </field>
+</record>
+```
+
+### 讨论和通知
+
+Odoo提供的技术模型不能直接满足业务需求，但可以为业务对象添加功能，而无需手动构建它们。
+
+其中之一是*Chatter*
+系统，Odoo电子邮件和信息系统的一部分，它可以向任何模型添加通知和讨论线程。模型只需`_inherit` `mail.thread`
+，并将`message_ids`字段添加到其表单视图中，以显示讨论线程。讨论线程是每个记录。
+
+对于我们的学院来说，允许讨论课程来解决问题是很有意义的，例如时间安排的改变或老师和助理之间的讨论:
+
+##### `academy/__manifest__.py`
+
+```python
+'version': '0.1',
+
+# any module necessary for this one to work correctly
+'depends': ['website', 'mail'],
+
+# always loaded
+'data': [
+```
+
+##### `academy/models.py`
+
+```python
+class Courses(models.Model):
+    _name = 'academy.courses'
+    _inherit = 'mail.thread'
+
+    name = fields.Char()
+    teacher_id = fields.Many2one('academy.teachers', string="Teacher")
+```
+
+##### `academy/views.xml`
+
+```xml
+
+<record id="academy_course_form" model="ir.ui.view">
+    <field name="name">Academy courses: form</field>
+    <field name="model">academy.courses</field>
+    <field name="arch" type="xml">
+        <form>
+            <sheet>
+                <field name="name"/>
+                <field name="teacher_id"/>
+            </sheet>
+            <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="message_ids" widget="mail_thread"/>
+            </div>
+        </form>
+    </field>
+</record>
+```
+
+在每个课程表单的底部，现在都有一个讨论线程，系统用户可以留言，关注或取消关注与特定课程相关的讨论。
