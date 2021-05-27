@@ -14,6 +14,6 @@
 
 [Odoo脚手架]()可以设置一个基本模块。要快速开始，只需调用:
 
-```python
+```shell
 $ ./odoo-bin scaffold Academy my-modules
 ```
