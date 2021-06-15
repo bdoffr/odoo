@@ -163,7 +163,7 @@ _inherits = {
 
 > 参考
 >
->[odoo.models.AbstractModel]()
+> [`odoo.models.AbstractModel`]()
 
 #### `_transient` = False
 
@@ -223,8 +223,7 @@ TransientModel具有简化的访问权限管理，所有用户都可以创建新
         这只对UI有影响。代码中的任何字段都可以赋值(如果字段是存储字段或可逆字段)。
         required (bool) – 该字段的值是否是必需的(默认:False)
         index (bool) – 该字段是否在数据库中被索引。注意:对非存储字段和虚拟字段没有影响。(默认值:False)
-        default (value or callable) – 字段的默认值;这要么是一个静态值，要么是一个接受记录集并返回值的函数;使用default=None放弃该字段的默认
-        值
+        default (value or callable) – 字段的默认值;这要么是一个静态值，要么是一个接受记录集并返回值的函数;使用default=None放弃该字段的默认值
         states (dict) –
         一个将状态值映射到UI属性-值对列表的字典;可能的属性有:readonly, required, invisible。
         警告
@@ -232,8 +231,7 @@ TransientModel具有简化的访问权限管理，所有用户都可以创建新
         groups (str) – 逗号分隔的XML ids组列表(字符串);这只限制了对给定组的用户的字段访问
         company_dependent (bool) –
         字段值是否依赖于当前公司;
-        该值不存储在模型表中。它被登记为ir.property。当需要company_dependent字段的值时，一个ir.property将被搜索，并链接到当前公司(如果存在一
-        个属性，则链接到当前记录)。
+        该值不存储在模型表中。它被登记为ir.property。当需要company_dependent字段的值时，一个ir.property将被搜索，并链接到当前公司(如果存在一个属性，则链接到当前记录)。
         如果记录上的值发生了变化，它要么修改当前记录的现有属性(如果存在的话)，要么为当前公司和res_id创建一个新的属性。
         如果在公司方面更改了该值，那么它将影响未更改该值的所有记录。
         copy (bool) – 当记录被复制时，字段值是否应该被复制(默认值:正常字段为True, 一对多和计算字段为False，包括属性字段和相关字段)
@@ -273,9 +271,4 @@ TransientModel具有简化的访问权限管理，所有用户都可以创建新
         related (str) –
         字段名序列
         Advanced fields/Related fields
-
-    
-
-         
-
 
