@@ -4,12 +4,12 @@
 
 (一个标着中文没有中文的开发文档)
 
-### 1.[Applications]
+### 1.[应用]
 
-### 1.[Administraation]
+### 2.[管理]
 
-### 2.[Developer](https://github.com/bdoffr/odoo/tree/main/Developer)
+### 3.[开发](https://github.com/bdoffr/odoo/tree/main/Developer)
 
-### 3.Services
+### 4.[服务]
 
-### 4.[Contributing]
+### 5.[贡献]
