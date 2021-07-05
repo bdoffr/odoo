@@ -1,5 +1,5 @@
-#### 1.[Reference](https://github.com/bdoffr/odoo/tree/main/Developer/Reference)
+#### 1.[参考](https://github.com/bdoffr/odoo/tree/main/Developer/Reference)
 
-#### 2.[Web Services]
+#### 2.[网页服务]
 
-#### 3.[Theme Tutorial](https://github.com/bdoffr/odoo/tree/main/Developer/Tutorials)
+#### 3.[教程](https://github.com/bdoffr/odoo/tree/main/Developer/Tutorials)
