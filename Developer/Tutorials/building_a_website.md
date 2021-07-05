@@ -160,8 +160,10 @@ class Teachers(models.Model):
 ##### `academy/security/ir.model.access.csv`
 
 ```postgresql
+
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_academy_teachers,access_academy_teachers,model_academy_teachers,,1,0,0,0
+
 ```
 
 这只是为`perm_read`所有用户（`group_id:id` 保留为空）提供了读取访问权限。
@@ -772,3 +774,162 @@ class Courses(models.Model):
 ```
 
 在每个课程表单的底部，现在都有一个讨论线程，系统用户可以留言，关注或取消关注与特定课程相关的讨论。
+
+### `课程销售`
+
+Odoo还提供允许更直接地使用或选择业务需求的业务模型。例如，该`website_sale`
+模块根据Odoo系统中的产品建立电子商务网站。通过使我们的课程成为特定类型的产品，我们可以轻松地使课程订阅变得可销售。
+
+而不是以前经典的继承，这意味着用*product*模型替换我们的*course*模型，并就地扩展产品（添加我们需要的任何东西）。
+
+首先，我们需要添加一个依赖项`website_sale`以便我们同时获得产品（通过`sale`）和电子商务接口：
+
+##### `academy/__manifest__.py`
+
+```python
+'version': '0.1',
+
+# any module necessary for this one to work correctly
+
+'depends': ['mail', 'website_sale'],
+
+# always loaded
+
+'data': [
+```
+
+重新启动Odoo，更新您的模块，现在网站上有一个商店部分，列出了许多预填充（通过演示数据）的产品。
+
+第二步是将课程模型替换为`product.template`，并为课程添加一个新的产品类别：
+
+##### `academy/__manifest__.py`
+
+```python
+    'security/ir.model.access.csv',
+'templates.xml',
+'views.xml',
+'data.xml',
+],
+# 仅在演示模式下加载
+'demo': [
+```
+
+##### `academy/data.xml`
+
+```xml
+
+<odoo>
+    <record model="product.public.category" id="category_courses">
+        <field name="name">Courses</field>
+        <field name="parent_id" ref="website_sale.categ_others"/>
+    </record>
+</odoo>
+```
+
+##### `academy/demo.xml`
+
+```xml
+
+<record id="course0" model="product.template">
+    <field name="name">Course 0</field>
+    <field name="teacher_id" ref="padilla"/>
+    <field name="public_categ_ids"
+           eval="[(4, ref('academy.category_courses'), False)]"/>
+    <field name="website_published">True</field>
+    <field name="list_price" type="float">0</field>
+    <field name="type">service</field>
+</record>
+<record id="course1" model="product.template">
+<field name="name">Course 1</field>
+<field name="teacher_id" ref="padilla"/>
+<field name="public_categ_ids"
+       eval="[(4, ref('academy.category_courses'), False)]"/>
+<field name="website_published">True</field>
+<field name="list_price" type="float">0</field>
+<field name="type">service</field>
+</record>
+<record id="course2" model="product.template">
+<field name="name">Course 2</field>
+<field name="teacher_id" ref="vaughn"/>
+<field name="public_categ_ids"
+       eval="[(4, ref('academy.category_courses'), False)]"/>
+<field name="website_published">True</field>
+<field name="list_price" type="float">0</field>
+<field name="type">service</field>
+</record>
+```
+
+##### `academy/models.py`
+
+```python
+class Courses(models.Model):
+    _name = 'academy.courses'
+    _inherit = ['mail.thread', 'product.template']
+
+    name = fields.Char()
+    teacher_id = fields.Many2one('academy.teachers', string="Teacher")
+```
+
+安装后，商店中现在可以使用一些课程，尽管它们可能需要寻找。
+
+> ##### 笔记
+> * 在适当的位置扩展模型，是`inherited`而不是给它一个新的`_name`
+> * `product.template`已经使用了讨论系统，所以我们可以从我们的扩展模型中删除它
+> * 我们正在创建默认`发布`的课程，因此无需登录即可查看
+
+### 改变现有视图
+
+到目前为止，我们已经简要地看到：
+
+* 新模型的创建
+* 新视图的产生
+* 新记录的创建
+* 现有模型的改变
+
+我们只剩下现有记录的更改和现有视图的更改。我们将在**商店**页面上同时进行。
+
+视图更改是通过创建*扩展*
+视图来完成的，这些视图应用于原始视图的顶部并对其进行更改。可以在不修改原始视图的情况下添加或删除这些更改视图，从而更容易尝试和回滚更改。
+
+因为我们的课程是免费的，所以没有理由在商店页面上显示他们的价格，所以我们将改变视图并隐藏价格，如果它是0。第一个任务是找出哪个视图显示价格，这可以通过**
+Customize ‣ Editor**完成，它可以让我们阅读渲染页面所涉及的各种模板。通过其中的一些，“Product item”看起来很可能是罪魁祸首。
+
+改变视图架构分3个步骤完成：
+
+1.创建新视图
+
+2.通过将新视图设置为修改`inherit_id`后视图的外部 id来扩展要修改的视图
+
+3.在架构中，使用`xpath`标签从修改后的视图中选择和更改元素
+
+##### `academy/templates.xml`
+
+```xml
+
+<template id="product_item_hide_no_price"
+          inherit_id="website_sale.products_item">
+    <xpath expr="//div[hasclass('product_price')]/b" position="attributes">
+        <attribute name="t-if">product.price &gt; 0</attribute>
+    </xpath>
+</template>
+
+```
+
+我们将更改的第二件事是默认情况下使产品类别侧边栏可见：**Customize ‣ Product Categories**
+允许您打开和关闭产品类别树（用于过滤主显示）。
+
+这是通过扩展模板的`customize_show`和`active`字段完成的：扩展模板（例如我们刚刚创建的模板）可以是*
+customize_show=True*。此选项将在带有复选框的**自定义**菜单中显示视图，允许管理员激活或禁用它们（并轻松自定义其网站页面）。
+
+我们只需要修改*Product Categories*记录并将其默认设置为*active=”True”*：
+
+##### `academy/templates.xml`
+
+```xml
+
+<record id="website_sale.products_categories" model="ir.ui.view">
+    <field name="active" eval="True"/>
+</record>
+```
+
+有了这个，产品类别侧边栏将在安装`Academy`模块时自动启用。
