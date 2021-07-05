@@ -4,14 +4,12 @@
 
 (一个标着中文没有中文的开发文档)
 
-### 1.[Applications](https://github.com/bdoffr/odoo/blob/main/Reference/Tutorials/building_a_website.md)
+### 1.[Applications]
 
-### 1.[Administraation](https://github.com/bdoffr/odoo/blob/main/orm_api.md)
+### 1.[Administraation]
 
-### 2.Developer
+### 2.[Developer](https://github.com/bdoffr/odoo/tree/main/Developer)
 
 ### 3.Services
 
-### 4.[Contributing](https://github.com/bdoffr/odoo/blob/main/views.md)
-
-
+### 4.[Contributing]
